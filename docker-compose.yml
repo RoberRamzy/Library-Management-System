@@ -1,0 +1,14 @@
+version: '3.8'
+
+services:
+  db:
+    image: mysql:8.0
+    container_name: bookstore_db
+    restart: always
+    environment:
+      MYSQL_DATABASE: 'bookstore'
+      MYSQL_ROOT_PASSWORD: 'root'
+    ports:
+      - "3306:3306"  
+    volumes:
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql 
