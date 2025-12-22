@@ -1,5 +1,5 @@
 from fastapi import FastAPI, HTTPException, Depends
-from pydantic import BaseModel
+from pydantic import BaseModel, EmailStr
 from typing import List, Optional
 import mysql.connector
 from datetime import date, datetime
@@ -182,7 +182,7 @@ def confirm_order(orderID: int, conn=Depends(get_db)):
     query = "UPDATE Publisher_Order SET status = 'Confirmed' WHERE orderID = %s"
     cursor.execute(query, (orderID,))
     conn.commit()
-    return {"message": "Order confirmed. Stock updated via trigger."} [cite: 43]
+    return {"message": "Order confirmed. Stock updated via trigger."} 
 
 # --- 3. Customer Operations ---
 
