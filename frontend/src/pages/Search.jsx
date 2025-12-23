@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { apiBase } from '../App'
 import { useAuth } from '../context/AuthContext'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
 
 const CATEGORIES = ['Science', 'Art', 'Religion', 'History', 'Geography']
 
@@ -9,6 +9,7 @@ export default function Search() {
   const [title, setTitle] = useState('')
   const [category, setCategory] = useState('')
   const [isbn, setIsbn] = useState('')
+  const [author, setAuthor] = useState('')
   const [results, setResults] = useState([])
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState('')
@@ -25,6 +26,7 @@ export default function Search() {
       if (title.trim()) params.append('title', title.trim())
       if (category) params.append('category', category)
       if (isbn.trim()) params.append('isbn', isbn.trim())
+      if (author.trim()) params.append('author', author.trim())
       // Include userID to get available stock (accounting for items in cart)
       if (user) params.append('userID', user.userID)
       
@@ -149,6 +151,13 @@ export default function Search() {
             value={isbn}
             onChange={(e) => setIsbn(e.target.value)}
           />
+          <input
+            className="input"
+            type="text"
+            placeholder="Author (optional)"
+            value={author}
+            onChange={(e) => setAuthor(e.target.value)}
+          />
           <button className="button button-primary" type="submit" disabled={loading}>
             {loading ? 'Searching...' : '🔍 Search'}
           </button>
@@ -170,11 +179,20 @@ export default function Search() {
           results.map((book, index) => (
             <div key={book.ISBN} className="book-card">
               <div className="book-info">
-                <h3 className="book-title">{book.Title}</h3>
+                <h3 className="book-title">
+                  <Link to={`/books/${book.ISBN}`} style={{ color: 'inherit', textDecoration: 'none' }}>
+                    {book.Title}
+                  </Link>
+                </h3>
                 <div className="book-details">
                   <span className="book-meta">ISBN: {book.ISBN}</span>
                   <span className="book-meta">Category: {book.category}</span>
                   <span className="book-meta">Year: {book.pubYear}</span>
+                  {book.authors && book.authors.length > 0 && (
+                    <span className="book-meta">
+                      Author{book.authors.length > 1 ? 's' : ''}: {book.authors.map(a => a.author_name).join(', ')}
+                    </span>
+                  )}
                   <span className={(book.DisplayStock !== undefined ? book.DisplayStock : book.StockQuantity) > 0 ? "book-stock" : "book-stock out-of-stock"}>
                     Available: {(book.DisplayStock !== undefined ? book.DisplayStock : book.StockQuantity)}
                   </span>
@@ -182,6 +200,11 @@ export default function Search() {
                 <div className="book-price">${book.Price.toFixed(2)}</div>
               </div>
               <div className="book-actions">
+                <Link to={`/books/${book.ISBN}`} style={{ marginRight: '0.5rem' }}>
+                  <button className="button button-secondary">
+                    View Details
+                  </button>
+                </Link>
                 <button
                   className="button button-primary"
                   onClick={() => addToCart(book, index)}

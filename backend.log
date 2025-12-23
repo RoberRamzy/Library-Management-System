@@ -1,0 +1,191 @@
+INFO:     Will watch for changes in these directories: ['/home/rober/Desktop/Database/project/Library-Management-System']
+INFO:     Uvicorn running on http://127.0.0.1:8000 (Press CTRL+C to quit)
+INFO:     Started reloader process [238207] using WatchFiles
+INFO:     Started server process [238211]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     127.0.0.1:34886 - "GET /docs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:40698 - "GET /customer/orders/1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:40688 - "GET /customer/orders/1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:40698 - "GET /cart/1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:40698 - "GET /cart/1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:40688 - "GET /books/search HTTP/1.1" 200 OK
+INFO:     127.0.0.1:40712 - "GET /admin/publishers HTTP/1.1" 200 OK
+INFO:     127.0.0.1:40698 - "GET /admin/publisher-orders HTTP/1.1" 200 OK
+INFO:     127.0.0.1:40698 - "GET /books/search HTTP/1.1" 200 OK
+INFO:     127.0.0.1:40712 - "GET /admin/publisher-orders HTTP/1.1" 200 OK
+INFO:     127.0.0.1:40688 - "GET /admin/publishers HTTP/1.1" 200 OK
+INFO:     127.0.0.1:45978 - "OPTIONS /admin/confirm-order/3 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:45978 - "PUT /admin/confirm-order/3 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:45986 - "GET /books/search HTTP/1.1" 200 OK
+INFO:     127.0.0.1:45978 - "GET /admin/publisher-orders HTTP/1.1" 200 OK
+INFO:     127.0.0.1:46626 - "GET /admin/publishers HTTP/1.1" 200 OK
+INFO:     127.0.0.1:46632 - "GET /books/search HTTP/1.1" 200 OK
+INFO:     127.0.0.1:46632 - "GET /admin/publishers HTTP/1.1" 200 OK
+INFO:     127.0.0.1:46626 - "GET /books/search HTTP/1.1" 200 OK
+INFO:     127.0.0.1:40294 - "GET /customer/orders/1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:40294 - "GET /customer/orders/1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:40294 - "GET /cart/1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:40294 - "GET /cart/1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:40294 - "GET /books/search?userID=1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:34760 - "GET /admin/publishers HTTP/1.1" 200 OK
+INFO:     127.0.0.1:34768 - "GET /books/search HTTP/1.1" 200 OK
+INFO:     127.0.0.1:34760 - "GET /books/search HTTP/1.1" 200 OK
+INFO:     127.0.0.1:34768 - "GET /admin/publishers HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59060 - "GET /admin/publishers HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59056 - "GET /books/search HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59072 - "GET /admin/publisher-orders HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59056 - "GET /admin/publishers HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59060 - "GET /books/search HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59072 - "GET /admin/publisher-orders HTTP/1.1" 200 OK
+WARNING:  WatchFiles detected changes in 'backend.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [238211]
+INFO:     Started server process [241377]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'backend.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [241377]
+INFO:     Started server process [243088]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'backend.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [243088]
+INFO:     Started server process [243202]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'backend.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [243202]
+INFO:     Started server process [243309]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'backend.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [243309]
+INFO:     Started server process [243447]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'backend.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [243447]
+INFO:     Started server process [243559]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'backend.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [243559]
+INFO:     Started server process [243654]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'backend.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [243654]
+INFO:     Started server process [243742]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'backend.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [243742]
+INFO:     Started server process [243798]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'backend.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [243798]
+INFO:     Started server process [243864]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'backend.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [243864]
+INFO:     Started server process [246282]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     127.0.0.1:58788 - "POST /customer/logout/1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58802 - "OPTIONS /login HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58802 - "POST /login HTTP/1.1" 200 OK
+INFO:     127.0.0.1:45736 - "GET /books/search?userID=1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:45740 - "GET /books/978-0439708189 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:45740 - "GET /books/978-0439708189 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50184 - "GET /books/search?userID=1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50184 - "GET /books/978-0439708189 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50184 - "GET /books/978-0439708189 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54962 - "GET /admin/authors HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54964 - "GET /admin/publishers HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54990 - "GET /admin/publishers HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54978 - "GET /books/search HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54994 - "GET /admin/authors HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55002 - "GET /books/search HTTP/1.1" 200 OK
+INFO:     127.0.0.1:44140 - "GET /books/978-0439708189 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:44140 - "GET /books/978-0439708189 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:44168 - "GET /cart/1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:44168 - "GET /cart/1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:44168 - "GET /books/search?userID=1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:44168 - "GET /admin/publishers HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53766 - "GET /admin/authors HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53768 - "GET /books/search HTTP/1.1" 200 OK
+INFO:     127.0.0.1:44168 - "GET /admin/publishers HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53768 - "GET /admin/authors HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53766 - "GET /books/search HTTP/1.1" 200 OK
+INFO:     127.0.0.1:34496 - "GET /admin/users HTTP/1.1" 200 OK
+INFO:     127.0.0.1:46384 - "GET /admin/reports/sales-daily?date_input=2025-12-23 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:46384 - "GET /admin/reports/sales-prev-month HTTP/1.1" 200 OK
+INFO:     127.0.0.1:35690 - "GET /admin/reports/top-customers HTTP/1.1" 200 OK
+INFO:     127.0.0.1:35700 - "GET /admin/reports/top-selling-books HTTP/1.1" 200 OK
+INFO:     127.0.0.1:41312 - "GET /books/search?userID=1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56856 - "GET /admin/authors HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56836 - "GET /admin/publishers HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56842 - "GET /books/search HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56856 - "GET /admin/publishers HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56836 - "GET /admin/authors HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56842 - "GET /books/search HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58722 - "GET /admin/reports/book-replenishments?isbn=978-0439708189 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54366 - "GET /admin/users HTTP/1.1" 200 OK
+INFO:     127.0.0.1:41132 - "GET /customer/orders/1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:41132 - "GET /customer/orders/1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:38702 - "GET /books/search?category=Science&userID=1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:38702 - "GET /books/search?category=Art&userID=1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:38702 - "GET /books/search?category=Religion&userID=1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:38702 - "GET /books/search?category=History&userID=1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:38702 - "GET /books/search?category=Geography&userID=1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:38702 - "POST /customer/logout/1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53914 - "POST /login HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53914 - "GET /customer/orders/2 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53914 - "GET /customer/orders/2 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53914 - "GET /cart/2 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53914 - "GET /cart/2 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53914 - "GET /books/search?userID=2 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53914 - "GET /books/978-0439708189 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53914 - "GET /books/978-0439708189 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53914 - "OPTIONS /cart/add?userID=2 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53914 - "POST /cart/add?userID=2 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53914 - "GET /books/978-0439708189 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53914 - "POST /cart/add?userID=2 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53914 - "GET /books/978-0439708189 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53914 - "GET /books/978-0439708189 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:35446 - "GET /books/978-0439708189 HTTP/1.1" 200 OK

@@ -77,6 +77,7 @@ class BookCreate(BaseModel):
     threshold: int
     category: str  # Science, Art, Religion, History, Geography
     PubID: int
+    authorIDs: List[int] = []  # List of author IDs
 
 class BookUpdate(BaseModel):
     Title: Optional[str] = None
@@ -86,11 +87,15 @@ class BookUpdate(BaseModel):
     threshold: Optional[int] = None
     category: Optional[str] = None
     PubID: Optional[int] = None
+    authorIDs: Optional[List[int]] = None  # Update authors if provided
 
 class PublisherOrderCreate(BaseModel):
     ISBN: str
     PubID: int
     Quantity: int
+
+class AuthorCreate(BaseModel):
+    author_name: str
 
 class CartItemIn(BaseModel):
     ISBN: str
@@ -191,32 +196,50 @@ def logout(userID: int, conn=Depends(get_db)):
 # ==========================================
 
 @app.get("/books/search")
-def search_books(title: Optional[str] = None, category: Optional[str] = None, isbn: Optional[str] = None, userID: Optional[int] = None, conn=Depends(get_db)):
+def search_books(title: Optional[str] = None, category: Optional[str] = None, isbn: Optional[str] = None, author: Optional[str] = None, userID: Optional[int] = None, conn=Depends(get_db)):
     """
     Search for books by ISBN, title, category, author, or publisher.
-    [cite_start]REQ: [cite: 44, 45, 46]
     If userID is provided, returns available stock (actual stock minus items in user's cart).
     """
     cursor = conn.cursor(dictionary=True)
-    query = "SELECT * FROM Book WHERE 1=1"
+    query = """
+        SELECT DISTINCT b.* 
+        FROM Book b
+        LEFT JOIN Book_Author ba ON b.ISBN = ba.ISBN
+        LEFT JOIN Author a ON ba.authorID = a.authorID
+        WHERE 1=1
+    """
     params = []
     if title:
-        query += " AND Title LIKE %s"
+        query += " AND b.Title LIKE %s"
         params.append(f"%{title}%")
     if category:
-        query += " AND category = %s"
+        query += " AND b.category = %s"
         params.append(category)
     if isbn:
-        query += " AND ISBN = %s"
+        query += " AND b.ISBN = %s"
         params.append(isbn)
+    if author:
+        query += " AND a.author_name LIKE %s"
+        params.append(f"%{author}%")
     
     cursor.execute(query, tuple(params))
     books = cursor.fetchall()
     
+    # Get authors for each book
+    for book in books:
+        cursor.execute("""
+            SELECT a.authorID, a.author_name 
+            FROM Book_Author ba
+            JOIN Author a ON ba.authorID = a.authorID
+            WHERE ba.ISBN = %s
+        """, (book['ISBN'],))
+        authors = cursor.fetchall()
+        book['authors'] = authors
+    
     # If userID provided, calculate available stock (stock - items in user's cart)
     if userID:
         for book in books:
-            # Get quantity in user's cart for this book
             cursor.execute("""
                 SELECT ci.Quantity 
                 FROM Cart_Item ci
@@ -225,7 +248,6 @@ def search_books(title: Optional[str] = None, category: Optional[str] = None, is
             """, (userID, book['ISBN']))
             cart_item = cursor.fetchone()
             if cart_item:
-                # Calculate available stock (actual stock - quantity in cart)
                 book['AvailableStock'] = max(0, book['StockQuantity'] - cart_item['Quantity'])
             else:
                 book['AvailableStock'] = book['StockQuantity']
@@ -236,7 +258,7 @@ def search_books(title: Optional[str] = None, category: Optional[str] = None, is
 def add_book(book: BookCreate, conn=Depends(get_db)):
     """
     Add a new book (Admin Only).
-    Validates all properties including threshold.
+    Validates all properties including threshold and authors.
     """
     cursor = conn.cursor()
     try:
@@ -250,6 +272,14 @@ def add_book(book: BookCreate, conn=Depends(get_db)):
         if not cursor.fetchone():
             raise HTTPException(status_code=400, detail="Publisher ID not found")
         
+        # Validate authors exist
+        if book.authorIDs:
+            placeholders = ','.join(['%s'] * len(book.authorIDs))
+            cursor.execute(f"SELECT authorID FROM Author WHERE authorID IN ({placeholders})", tuple(book.authorIDs))
+            found_authors = cursor.fetchall()
+            if len(found_authors) != len(book.authorIDs):
+                raise HTTPException(status_code=400, detail="One or more author IDs not found")
+        
         # Validate non-negative values
         if book.Price < 0:
             raise HTTPException(status_code=400, detail="Price cannot be negative")
@@ -258,10 +288,18 @@ def add_book(book: BookCreate, conn=Depends(get_db)):
         if book.threshold < 0:
             raise HTTPException(status_code=400, detail="Threshold cannot be negative")
         
+        # Insert book
         query = """INSERT INTO Book (ISBN, Title, pubYear, Price, StockQuantity, threshold, category, PubID) 
                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s)"""
         cursor.execute(query, (book.ISBN, book.Title, book.pubYear, book.Price, 
                                book.StockQuantity, book.threshold, book.category, book.PubID))
+        
+        # Insert authors
+        if book.authorIDs:
+            for author_id in book.authorIDs:
+                cursor.execute("INSERT INTO Book_Author (ISBN, authorID) VALUES (%s, %s)", 
+                             (book.ISBN, author_id))
+        
         conn.commit()
         return {"message": "Book added successfully"}
     except HTTPException:
@@ -275,12 +313,58 @@ def add_book(book: BookCreate, conn=Depends(get_db)):
 def get_book(isbn: str, conn=Depends(get_db)):
     """
     Get book details by ISBN (Admin Only).
+    Includes authors, publisher info.
     """
     cursor = conn.cursor(dictionary=True)
     cursor.execute("SELECT * FROM Book WHERE ISBN = %s", (isbn,))
     book = cursor.fetchone()
     if not book:
         raise HTTPException(status_code=404, detail="Book not found")
+    
+    # Get authors
+    cursor.execute("""
+        SELECT a.authorID, a.author_name 
+        FROM Book_Author ba
+        JOIN Author a ON ba.authorID = a.authorID
+        WHERE ba.ISBN = %s
+    """, (isbn,))
+    book['authors'] = cursor.fetchall()
+    
+    # Get publisher info
+    cursor.execute("SELECT name, phone, address FROM Publisher WHERE PubID = %s", (book['PubID'],))
+    publisher = cursor.fetchone()
+    if publisher:
+        book['publisher'] = publisher
+    
+    return book
+
+@app.get("/books/{isbn}")
+def get_book_details(isbn: str, conn=Depends(get_db)):
+    """
+    Get book details by ISBN (Public).
+    Includes authors, publisher info.
+    """
+    cursor = conn.cursor(dictionary=True)
+    cursor.execute("SELECT * FROM Book WHERE ISBN = %s", (isbn,))
+    book = cursor.fetchone()
+    if not book:
+        raise HTTPException(status_code=404, detail="Book not found")
+    
+    # Get authors
+    cursor.execute("""
+        SELECT a.authorID, a.author_name 
+        FROM Book_Author ba
+        JOIN Author a ON ba.authorID = a.authorID
+        WHERE ba.ISBN = %s
+    """, (isbn,))
+    book['authors'] = cursor.fetchall()
+    
+    # Get publisher info
+    cursor.execute("SELECT name, phone, address FROM Publisher WHERE PubID = %s", (book['PubID'],))
+    publisher = cursor.fetchone()
+    if publisher:
+        book['publisher'] = publisher
+    
     return book
 
 @app.put("/admin/books/{isbn}")
@@ -326,15 +410,38 @@ def update_book(isbn: str, book_update: BookUpdate, conn=Depends(get_db)):
         if 'threshold' in update_fields and update_fields['threshold'] < 0:
             raise HTTPException(status_code=400, detail="Threshold cannot be negative")
         
+        # Handle author updates separately
+        author_ids = update_fields.pop('authorIDs', None)
+        
         # Build update query
-        for field, value in update_fields.items():
-            updates.append(f"{field} = %s")
-            params.append(value)
+        if update_fields:
+            for field, value in update_fields.items():
+                updates.append(f"{field} = %s")
+                params.append(value)
+            
+            params.append(isbn)
+            query = f"UPDATE Book SET {', '.join(updates)} WHERE ISBN = %s"
+            cursor.execute(query, tuple(params))
         
-        params.append(isbn)
-        query = f"UPDATE Book SET {', '.join(updates)} WHERE ISBN = %s"
+        # Update authors if provided
+        if author_ids is not None:
+            # Validate authors exist
+            if author_ids:
+                placeholders = ','.join(['%s'] * len(author_ids))
+                cursor.execute(f"SELECT authorID FROM Author WHERE authorID IN ({placeholders})", tuple(author_ids))
+                found_authors = cursor.fetchall()
+                if len(found_authors) != len(author_ids):
+                    raise HTTPException(status_code=400, detail="One or more author IDs not found")
+            
+            # Delete existing author relationships
+            cursor.execute("DELETE FROM Book_Author WHERE ISBN = %s", (isbn,))
+            
+            # Insert new author relationships
+            if author_ids:
+                for author_id in author_ids:
+                    cursor.execute("INSERT INTO Book_Author (ISBN, authorID) VALUES (%s, %s)", 
+                                 (isbn, author_id))
         
-        cursor.execute(query, tuple(params))
         conn.commit()
         
         return {"message": "Book updated successfully"}
@@ -356,6 +463,30 @@ def list_publishers(conn=Depends(get_db)):
     cursor = conn.cursor(dictionary=True)
     cursor.execute("SELECT PubID, name, phone, address FROM Publisher ORDER BY PubID")
     return cursor.fetchall()
+
+@app.get("/admin/authors")
+def list_authors(conn=Depends(get_db)):
+    """
+    List all authors (Admin Only).
+    """
+    cursor = conn.cursor(dictionary=True)
+    cursor.execute("SELECT authorID, author_name FROM Author ORDER BY author_name")
+    return cursor.fetchall()
+
+@app.post("/admin/authors")
+def create_author(author: AuthorCreate, conn=Depends(get_db)):
+    """
+    Create a new author (Admin Only).
+    """
+    cursor = conn.cursor()
+    try:
+        cursor.execute("INSERT INTO Author (author_name) VALUES (%s)", (author.author_name,))
+        author_id = cursor.lastrowid
+        conn.commit()
+        return {"message": "Author created successfully", "authorID": author_id, "author_name": author.author_name}
+    except mysql.connector.Error as err:
+        conn.rollback()
+        raise HTTPException(status_code=400, detail=f"Author creation failed: {str(err)}")
 
 @app.get("/admin/publisher-orders")
 def list_publisher_orders(conn=Depends(get_db)):

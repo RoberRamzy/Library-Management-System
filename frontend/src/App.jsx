@@ -12,6 +12,7 @@ import Orders from './pages/Orders'
 import AdminReports from './pages/AdminReports'
 import AdminBooks from './pages/AdminBooks'
 import AdminOrders from './pages/AdminOrders'
+import BookDetails from './pages/BookDetails'
 
 const API = import.meta.env.VITE_API_URL || 'http://localhost:8000'
 
@@ -73,6 +74,7 @@ export default function App(){
           <Route path="/admin" element={<AdminReports/>} />
           <Route path="/admin/books" element={<AdminBooks/>} />
           <Route path="/admin/orders" element={<AdminOrders/>} />
+          <Route path="/books/:isbn" element={<BookDetails/>} />
         </Routes>
       </main>
     </div>
