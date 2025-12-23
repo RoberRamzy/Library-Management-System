@@ -396,6 +396,11 @@ body {
   font-weight: 500;
 }
 
+.book-stock.out-of-stock {
+  color: #e74c3c;
+  font-weight: 600;
+}
+
 .book-actions {
   margin-left: 1rem;
 }
@@ -678,6 +683,42 @@ body {
   padding: 2rem;
   color: #666;
   font-size: 1.1rem;
+}
+
+/* Admin Sections */
+.admin-section {
+  background: white;
+  padding: 2rem;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  margin-bottom: 2rem;
+}
+
+.admin-section h3 {
+  margin-top: 0;
+  margin-bottom: 1.5rem;
+  color: #333;
+}
+
+.book-results {
+  margin-top: 1rem;
+}
+
+.info-box {
+  background: #f8f9fa;
+  padding: 1.5rem;
+  border-radius: 8px;
+  border-left: 4px solid #667eea;
+}
+
+.info-box h4 {
+  color: #333;
+  margin-bottom: 0.5rem;
+}
+
+.info-box ul {
+  color: #666;
+  line-height: 1.8;
 }
 
 /* Admin Tabs */

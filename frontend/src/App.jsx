@@ -10,6 +10,8 @@ import Signup from './pages/Signup'
 import Profile from './pages/Profile'
 import Orders from './pages/Orders'
 import AdminReports from './pages/AdminReports'
+import AdminBooks from './pages/AdminBooks'
+import AdminOrders from './pages/AdminOrders'
 
 const API = import.meta.env.VITE_API_URL || 'http://localhost:8000'
 
@@ -40,7 +42,13 @@ export default function App(){
               <Link to="/cart">Cart</Link>
               <Link to="/orders">Orders</Link>
               <Link to="/profile">Profile</Link>
-              {user.Role === 'Admin' && <Link to="/admin">Admin</Link>}
+              {user.Role === 'Admin' && (
+                <>
+                  <Link to="/admin">Reports</Link>
+                  <Link to="/admin/books">Books</Link>
+                  <Link to="/admin/orders">Orders</Link>
+                </>
+              )}
               <button className="btn-link" onClick={handleLogout}>Logout</button>
               <span className="user-badge">{user.username}</span>
             </>
@@ -63,6 +71,8 @@ export default function App(){
           <Route path="/profile" element={<Profile/>} />
           <Route path="/orders" element={<Orders/>} />
           <Route path="/admin" element={<AdminReports/>} />
+          <Route path="/admin/books" element={<AdminBooks/>} />
+          <Route path="/admin/orders" element={<AdminOrders/>} />
         </Routes>
       </main>
     </div>

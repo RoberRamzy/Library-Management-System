@@ -78,6 +78,20 @@ class BookCreate(BaseModel):
     category: str  # Science, Art, Religion, History, Geography
     PubID: int
 
+class BookUpdate(BaseModel):
+    Title: Optional[str] = None
+    pubYear: Optional[int] = None
+    Price: Optional[float] = None
+    StockQuantity: Optional[int] = None
+    threshold: Optional[int] = None
+    category: Optional[str] = None
+    PubID: Optional[int] = None
+
+class PublisherOrderCreate(BaseModel):
+    ISBN: str
+    PubID: int
+    Quantity: int
+
 class CartItemIn(BaseModel):
     ISBN: str
     Quantity: int
@@ -177,10 +191,11 @@ def logout(userID: int, conn=Depends(get_db)):
 # ==========================================
 
 @app.get("/books/search")
-def search_books(title: Optional[str] = None, category: Optional[str] = None, isbn: Optional[str] = None, conn=Depends(get_db)):
+def search_books(title: Optional[str] = None, category: Optional[str] = None, isbn: Optional[str] = None, userID: Optional[int] = None, conn=Depends(get_db)):
     """
     Search for books by ISBN, title, category, author, or publisher.
     [cite_start]REQ: [cite: 44, 45, 46]
+    If userID is provided, returns available stock (actual stock minus items in user's cart).
     """
     cursor = conn.cursor(dictionary=True)
     query = "SELECT * FROM Book WHERE 1=1"
@@ -196,25 +211,206 @@ def search_books(title: Optional[str] = None, category: Optional[str] = None, is
         params.append(isbn)
     
     cursor.execute(query, tuple(params))
-    return cursor.fetchall()
+    books = cursor.fetchall()
+    
+    # If userID provided, calculate available stock (stock - items in user's cart)
+    if userID:
+        for book in books:
+            # Get quantity in user's cart for this book
+            cursor.execute("""
+                SELECT ci.Quantity 
+                FROM Cart_Item ci
+                JOIN Shopping_Cart sc ON ci.cartID = sc.cartID
+                WHERE sc.userID = %s AND ci.ISBN = %s
+            """, (userID, book['ISBN']))
+            cart_item = cursor.fetchone()
+            if cart_item:
+                # Calculate available stock (actual stock - quantity in cart)
+                book['AvailableStock'] = max(0, book['StockQuantity'] - cart_item['Quantity'])
+            else:
+                book['AvailableStock'] = book['StockQuantity']
+    
+    return books
 
 @app.post("/admin/books")
 def add_book(book: BookCreate, conn=Depends(get_db)):
     """
     Add a new book (Admin Only).
-    [cite_start]REQ: [cite: 21, 22]
+    Validates all properties including threshold.
     """
     cursor = conn.cursor()
     try:
+        # Validate category
+        valid_categories = ['Science', 'Art', 'Religion', 'History', 'Geography']
+        if book.category not in valid_categories:
+            raise HTTPException(status_code=400, detail=f"Invalid category. Must be one of: {', '.join(valid_categories)}")
+        
+        # Validate PubID exists
+        cursor.execute("SELECT PubID FROM Publisher WHERE PubID = %s", (book.PubID,))
+        if not cursor.fetchone():
+            raise HTTPException(status_code=400, detail="Publisher ID not found")
+        
+        # Validate non-negative values
+        if book.Price < 0:
+            raise HTTPException(status_code=400, detail="Price cannot be negative")
+        if book.StockQuantity < 0:
+            raise HTTPException(status_code=400, detail="Stock quantity cannot be negative")
+        if book.threshold < 0:
+            raise HTTPException(status_code=400, detail="Threshold cannot be negative")
+        
         query = """INSERT INTO Book (ISBN, Title, pubYear, Price, StockQuantity, threshold, category, PubID) 
                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s)"""
         cursor.execute(query, (book.ISBN, book.Title, book.pubYear, book.Price, 
                                book.StockQuantity, book.threshold, book.category, book.PubID))
         conn.commit()
         return {"message": "Book added successfully"}
+    except HTTPException:
+        conn.rollback()
+        raise
     except mysql.connector.Error as err:
         conn.rollback()
-        raise HTTPException(status_code=400, detail=str(err))
+        raise HTTPException(status_code=400, detail=f"Book creation failed: {str(err)}")
+
+@app.get("/admin/books/{isbn}")
+def get_book(isbn: str, conn=Depends(get_db)):
+    """
+    Get book details by ISBN (Admin Only).
+    """
+    cursor = conn.cursor(dictionary=True)
+    cursor.execute("SELECT * FROM Book WHERE ISBN = %s", (isbn,))
+    book = cursor.fetchone()
+    if not book:
+        raise HTTPException(status_code=404, detail="Book not found")
+    return book
+
+@app.put("/admin/books/{isbn}")
+def update_book(isbn: str, book_update: BookUpdate, conn=Depends(get_db)):
+    """
+    Update an existing book (Admin Only).
+    Can update title, price, stock quantity, threshold, category, publisher.
+    Stock quantity cannot be negative (enforced by trigger).
+    """
+    cursor = conn.cursor()
+    try:
+        # Check if book exists
+        cursor.execute("SELECT StockQuantity FROM Book WHERE ISBN = %s", (isbn,))
+        existing = cursor.fetchone()
+        if not existing:
+            raise HTTPException(status_code=404, detail="Book not found")
+        
+        # Build update query dynamically
+        updates = []
+        params = []
+        
+        update_fields = book_update.dict(exclude_none=True)
+        if not update_fields:
+            raise HTTPException(status_code=400, detail="No fields to update")
+        
+        # Validate category if provided
+        if 'category' in update_fields:
+            valid_categories = ['Science', 'Art', 'Religion', 'History', 'Geography']
+            if update_fields['category'] not in valid_categories:
+                raise HTTPException(status_code=400, detail=f"Invalid category. Must be one of: {', '.join(valid_categories)}")
+        
+        # Validate PubID if provided
+        if 'PubID' in update_fields:
+            cursor.execute("SELECT PubID FROM Publisher WHERE PubID = %s", (update_fields['PubID'],))
+            if not cursor.fetchone():
+                raise HTTPException(status_code=400, detail="Publisher ID not found")
+        
+        # Validate non-negative values
+        if 'Price' in update_fields and update_fields['Price'] < 0:
+            raise HTTPException(status_code=400, detail="Price cannot be negative")
+        if 'StockQuantity' in update_fields and update_fields['StockQuantity'] < 0:
+            raise HTTPException(status_code=400, detail="Stock quantity cannot be negative (trigger will also enforce this)")
+        if 'threshold' in update_fields and update_fields['threshold'] < 0:
+            raise HTTPException(status_code=400, detail="Threshold cannot be negative")
+        
+        # Build update query
+        for field, value in update_fields.items():
+            updates.append(f"{field} = %s")
+            params.append(value)
+        
+        params.append(isbn)
+        query = f"UPDATE Book SET {', '.join(updates)} WHERE ISBN = %s"
+        
+        cursor.execute(query, tuple(params))
+        conn.commit()
+        
+        return {"message": "Book updated successfully"}
+    except HTTPException:
+        conn.rollback()
+        raise
+    except mysql.connector.Error as err:
+        conn.rollback()
+        # Check if error is from trigger (negative stock)
+        if "negative" in str(err).lower():
+            raise HTTPException(status_code=400, detail="Stock quantity cannot be negative")
+        raise HTTPException(status_code=400, detail=f"Book update failed: {str(err)}")
+
+@app.get("/admin/publishers")
+def list_publishers(conn=Depends(get_db)):
+    """
+    List all publishers (Admin Only).
+    """
+    cursor = conn.cursor(dictionary=True)
+    cursor.execute("SELECT PubID, name, phone, address FROM Publisher ORDER BY PubID")
+    return cursor.fetchall()
+
+@app.get("/admin/publisher-orders")
+def list_publisher_orders(conn=Depends(get_db)):
+    """
+    List all publisher orders (Admin Only).
+    """
+    cursor = conn.cursor(dictionary=True)
+    query = """
+        SELECT po.orderID, po.orderDate, po.Quantity, po.status,
+               b.ISBN, b.Title, b.threshold, b.StockQuantity,
+               p.PubID, p.name as publisher_name
+        FROM Publisher_Order po
+        JOIN Book b ON po.ISBN = b.ISBN
+        JOIN Publisher p ON po.PubID = p.PubID
+        ORDER BY po.orderDate DESC, po.orderID DESC
+    """
+    cursor.execute(query)
+    return cursor.fetchall()
+
+@app.post("/admin/publisher-orders")
+def create_publisher_order(order: PublisherOrderCreate, conn=Depends(get_db)):
+    """
+    Manually place a publisher order (Admin Only).
+    Creates an order with constant quantity (default 50) or specified quantity.
+    """
+    cursor = conn.cursor()
+    try:
+        # Validate book exists
+        cursor.execute("SELECT PubID, threshold FROM Book WHERE ISBN = %s", (order.ISBN,))
+        book = cursor.fetchone()
+        if not book:
+            raise HTTPException(status_code=404, detail="Book not found")
+        
+        # Validate publisher matches book's publisher
+        if book[0] != order.PubID:
+            raise HTTPException(status_code=400, detail="Publisher ID does not match the book's publisher")
+        
+        # Validate quantity
+        if order.Quantity <= 0:
+            raise HTTPException(status_code=400, detail="Order quantity must be positive")
+        
+        # Create order
+        query = """INSERT INTO Publisher_Order (orderDate, Quantity, status, PubID, ISBN) 
+                   VALUES (CURDATE(), %s, 'Pending', %s, %s)"""
+        cursor.execute(query, (order.Quantity, order.PubID, order.ISBN))
+        order_id = cursor.lastrowid
+        conn.commit()
+        
+        return {"message": "Publisher order created successfully", "orderID": order_id}
+    except HTTPException:
+        conn.rollback()
+        raise
+    except mysql.connector.Error as err:
+        conn.rollback()
+        raise HTTPException(status_code=400, detail=f"Order creation failed: {str(err)}")
 
 # ==========================================
 # 3. SHOPPING CART MANAGEMENT
@@ -225,30 +421,57 @@ def add_to_cart(userID: int, item: CartItemIn, conn=Depends(get_db)):
     """
     Add books to a shopping cart.
     [cite_start]REQ: [cite: 70, 71]
+    Validates stock availability and returns updated stock quantity.
     """
-    cursor = conn.cursor()
+    cursor = conn.cursor(dictionary=True)
     try:
+        # Check current stock availability
+        cursor.execute("SELECT StockQuantity FROM Book WHERE ISBN = %s", (item.ISBN,))
+        book = cursor.fetchone()
+        if not book:
+            raise HTTPException(status_code=404, detail="Book not found")
+        
+        current_stock = book['StockQuantity']
+        if current_stock < item.Quantity:
+            raise HTTPException(status_code=400, detail=f"Not enough stock. Only {current_stock} available.")
+        
         # Get user's cartID
         cursor.execute("SELECT cartID FROM Shopping_Cart WHERE userID = %s", (userID,))
         cart = cursor.fetchone()
         if not cart:
             raise HTTPException(status_code=404, detail="Cart not found for this user")
-        cart_id = cart[0]
+        cart_id = cart['cartID']
 
         # Check if book already in cart (Update Quantity) or New (Insert)
         cursor.execute("SELECT Quantity FROM Cart_Item WHERE cartID = %s AND ISBN = %s", (cart_id, item.ISBN))
         existing = cursor.fetchone()
         
         if existing:
-            new_qty = existing[0] + item.Quantity
+            existing_qty = existing['Quantity'] if isinstance(existing, dict) else existing[0]
+            new_qty = existing_qty + item.Quantity
+            # Check if adding this quantity would exceed available stock
+            if new_qty > current_stock:
+                raise HTTPException(status_code=400, detail=f"Cannot add more items. Only {current_stock} available.")
             cursor.execute("UPDATE Cart_Item SET Quantity = %s WHERE cartID = %s AND ISBN = %s", 
                            (new_qty, cart_id, item.ISBN))
         else:
             cursor.execute("INSERT INTO Cart_Item (cartID, ISBN, Quantity) VALUES (%s, %s, %s)", 
                            (cart_id, item.ISBN, item.Quantity))
         
+        # Calculate available stock after adding to cart (for UI display)
+        # Available stock = actual stock - quantity now in cart
+        cart_qty_after = existing['Quantity'] + item.Quantity if existing else item.Quantity
+        available_stock = max(0, current_stock - cart_qty_after)
+        
         conn.commit()
-        return {"message": "Item added to cart"}
+        return {
+            "message": "Item added to cart",
+            "currentStock": current_stock,  # Actual stock in database
+            "availableStock": available_stock  # Available stock (actual - in cart)
+        }
+    except HTTPException:
+        conn.rollback()
+        raise
     except mysql.connector.Error as err:
         conn.rollback()
         raise HTTPException(status_code=400, detail=str(err))
@@ -357,15 +580,31 @@ def checkout(data: CheckoutIn, conn=Depends(get_db)):
 @app.put("/admin/confirm-order/{orderID}")
 def confirm_publisher_order(orderID: int, conn=Depends(get_db)):
     """
-    Confirm an order from publisher.
-    [cite_start]REQ: [cite: 41, 42]
-    [cite_start]NOTE: Trigger 'confirm_order_add_stock' handles the stock update automatically[cite: 43].
+    Confirm a publisher order (Admin Only).
+    Upon confirmation, the trigger 'confirm_order_add_stock' automatically adds the ordered quantity to the book's stock.
     """
-    cursor = conn.cursor()
-    query = "UPDATE Publisher_Order SET status = 'Confirmed' WHERE orderID = %s"
-    cursor.execute(query, (orderID,))
-    conn.commit()
-    return {"message": "Order confirmed. Stock updated via trigger."}
+    cursor = conn.cursor(dictionary=True)
+    try:
+        # Check if order exists
+        cursor.execute("SELECT status, ISBN, Quantity FROM Publisher_Order WHERE orderID = %s", (orderID,))
+        order = cursor.fetchone()
+        if not order:
+            raise HTTPException(status_code=404, detail="Order not found")
+        
+        if order['status'] == 'Confirmed':
+            raise HTTPException(status_code=400, detail="Order is already confirmed")
+        
+        # Update status to Confirmed (trigger will add stock)
+        cursor.execute("UPDATE Publisher_Order SET status = 'Confirmed' WHERE orderID = %s", (orderID,))
+        conn.commit()
+        
+        return {"message": "Order confirmed. Stock updated via trigger."}
+    except HTTPException:
+        conn.rollback()
+        raise
+    except mysql.connector.Error as err:
+        conn.rollback()
+        raise HTTPException(status_code=400, detail=f"Order confirmation failed: {str(err)}")
 
 @app.get("/customer/orders/{userID}")
 def view_past_orders(userID: int, conn=Depends(get_db)):
