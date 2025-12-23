@@ -1,3 +1,6 @@
+venv
+node_modules
+
 __pycache__/backend.cpython-312.pyc
 __pycache__/test.cpython-312.pyc
 venv/lib64
@@ -2055,3 +2058,5 @@ venv/lib/python3.12/site-packages/mysqlx/protobuf/__pycache__/mysqlx_resultset_p
 venv/lib/python3.12/site-packages/mysqlx/protobuf/__pycache__/mysqlx_session_pb2.cpython-312.pyc
 venv/lib/python3.12/site-packages/mysqlx/protobuf/__pycache__/mysqlx_sql_pb2.cpython-312.pyc
 venv/lib/python3.12/site-packages/mysqlx/protobuf/__pycache__/t.cpython-312.pyc
+venv/bin/email_validator
+frontend.log

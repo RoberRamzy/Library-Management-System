@@ -11,7 +11,8 @@ def read_root():
             user="root",
             password="root",
             database="bookstore",
-            port=3306
+            port=3306,
+            auth_plugin="mysql_native_password"
         )
         return {"status": "Connected to MySQL!", "version": conn.get_server_info()}
     except Exception as e:
