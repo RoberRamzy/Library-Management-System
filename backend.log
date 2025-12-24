@@ -189,3 +189,8 @@ INFO:     127.0.0.1:53914 - "POST /cart/add?userID=2 HTTP/1.1" 200 OK
 INFO:     127.0.0.1:53914 - "GET /books/978-0439708189 HTTP/1.1" 200 OK
 INFO:     127.0.0.1:53914 - "GET /books/978-0439708189 HTTP/1.1" 200 OK
 INFO:     127.0.0.1:35446 - "GET /books/978-0439708189 HTTP/1.1" 200 OK
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [246282]
+INFO:     Stopping reloader process [238207]
