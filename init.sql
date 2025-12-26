@@ -27,18 +27,21 @@ CREATE DATABASE IF NOT EXISTS bookstore;
 USE bookstore;
 
 -- Table: user (handles both Admin and Customer via Role)
+-- Table: user (handles both Admin and Customer via Role)
 CREATE TABLE `user` (
   `userID` INT AUTO_INCREMENT PRIMARY KEY,
-  `username` VARCHAR(50) UNIQUE NOT NULL,
-  `password` VARCHAR(255) NOT NULL,  -- Missing in schema; added per PDF signup
+  `username` VARCHAR(50) NOT NULL,
+  `password` VARCHAR(255) NOT NULL,
   `first_name` VARCHAR(100) NOT NULL,
   `last_name` VARCHAR(100) NOT NULL,
   `email` VARCHAR(255) NOT NULL,
   `phone` VARCHAR(20),
-  `address` VARCHAR(255),  -- Shipping address for customers
-  `Role` ENUM('Admin', 'Customer') NOT NULL
+  `address` VARCHAR(255),
+  `Role` ENUM('Admin', 'Customer') NOT NULL,
+  -- Define constraints at the bottom for clarity
+  CONSTRAINT UNIQUE_username UNIQUE (username),
+  CONSTRAINT UNIQUE_email UNIQUE (email)
 );
-
 -- Table: Publisher
 CREATE TABLE Publisher (
   PubID INT AUTO_INCREMENT PRIMARY KEY,

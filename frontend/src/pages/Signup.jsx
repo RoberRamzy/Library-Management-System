@@ -50,10 +50,19 @@ export default function Signup() {
     setLoading(false)
 
     if (result.success) {
-      alert(`Account created successfully! User ID: ${result.userID}`)
-      navigate('/login')
+      alert(`Account created successfully! User ID: ${result.userID}`);
+      navigate('/login');
     } else {
-      setError(result.error || 'Signup failed')
+      // Clean translation of Database Integrity Errors
+      const errorMsg = result.error || '';
+      
+      if (errorMsg.includes("Duplicate entry") && errorMsg.includes("email")) {
+        setError("This email address is already registered. Please try logging in.");
+      } else if (errorMsg.includes("Duplicate entry") && errorMsg.includes("username")) {
+        setError("This username is taken. Please choose another one.");
+      } else {
+        setError(errorMsg || 'Signup failed. Please try again.');
+      }
     }
   }
 

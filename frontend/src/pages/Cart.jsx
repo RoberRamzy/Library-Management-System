@@ -20,13 +20,11 @@ export default function Cart() {
 
   const load = async () => {
     if (!user) return
-    
     setLoading(true)
     setError('')
     try {
       const res = await fetch(`${apiBase}/cart/${user.userID}`)
       if (!res.ok) throw new Error('Failed to load cart')
-      
       const data = await res.json()
       setCart(data)
     } catch (err) {
@@ -37,27 +35,48 @@ export default function Cart() {
     }
   }
 
+  const updateQuantity = async (isbn, currentQty, newQty) => {
+    if (!user) return
+    if (newQty < 1) return; // Prevent 0 or negative via input
+
+    // Calculate the difference because /cart/add adds to existing qty
+    const difference = newQty - currentQty;
+    if (difference === 0) return;
+
+    try {
+      const res = await fetch(`${apiBase}/cart/add?userID=${user.userID}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ISBN: isbn, Quantity: difference })
+      });
+
+      if (!res.ok) {
+        const errData = await res.json();
+        throw new Error(errData.detail || 'Insufficient stock to update quantity');
+      }
+
+      await load(); // Refresh cart to show new totals
+    } catch (err) {
+      alert(err.message);
+      await load(); // Reset input to actual DB value on failure
+    }
+  }
+
   const remove = async (isbn) => {
     if (!user) return
-    
     try {
       const res = await fetch(
         `${apiBase}/cart/remove?userID=${user.userID}&isbn=${encodeURIComponent(isbn)}`,
         { method: 'DELETE' }
       )
-      
       if (!res.ok) throw new Error('Failed to remove item')
-      
       await load()
     } catch (err) {
-      alert('Failed to remove item. Please try again.')
-      console.error(err)
+      alert('Failed to remove item.')
     }
   }
 
-  if (!user) {
-    return null
-  }
+  if (!user) return null
 
   return (
     <div className="page">
@@ -78,19 +97,31 @@ export default function Cart() {
         <>
           <div className="cart-items">
             {cart.items.map(item => (
-              <div key={item.ISBN} className="book-card">
+              <div key={item.ISBN} className="book-card" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <div className="book-info">
                   <h3 className="book-title">{item.Title}</h3>
                   <div className="book-details">
-                    <span className="book-meta">ISBN: {item.ISBN}</span>
-                    <span className="book-meta">Quantity: {item.Quantity}</span>
-                    <span className="book-meta">Unit Price: ${item.Price.toFixed(2)}</span>
+                    <p className="book-meta">ISBN: {item.ISBN}</p>
+                    <p className="book-meta">Unit Price: ${item.Price.toFixed(2)}</p>
                   </div>
-                  <div className="book-price">Item Total: ${item.TotalItemPrice.toFixed(2)}</div>
+                  <div className="book-price"><strong>Subtotal: ${item.TotalItemPrice.toFixed(2)}</strong></div>
                 </div>
-                <div className="book-actions">
+
+                <div className="cart-item-actions" style={{ display: 'flex', flexDirection: 'column', gap: '10px', alignItems: 'flex-end' }}>
+                  <div className="qty-control" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <label style={{ fontSize: '0.9rem' }}>Qty:</label>
+                    <input
+                      type="number"
+                      className="input"
+                      style={{ width: '70px', textAlign: 'center' }}
+                      min="1"
+                      value={item.Quantity}
+                      onChange={(e) => updateQuantity(item.ISBN, item.Quantity, parseInt(e.target.value))}
+                    />
+                  </div>
                   <button
                     className="button button-danger"
+                    style={{ padding: '5px 15px', fontSize: '0.8rem' }}
                     onClick={() => remove(item.ISBN)}
                   >
                     Remove
@@ -100,14 +131,13 @@ export default function Cart() {
             ))}
           </div>
 
-          <div className="cart-summary">
-            <div className="summary-row">
-              <span className="summary-label">Cart Total:</span>
-              <span className="summary-value">${cart.cart_total.toFixed(2)}</span>
+          <div className="cart-summary" style={{ marginTop: '30px', padding: '20px', background: '#f8f9fa', borderRadius: '10px', textAlign: 'right' }}>
+            <div className="summary-row" style={{ fontSize: '1.2rem', marginBottom: '20px' }}>
+              <strong>Grand Total: ${cart.cart_total.toFixed(2)}</strong>
             </div>
             
             <Link to="/checkout">
-              <button className="button button-primary button-large">
+              <button className="button button-primary button-large" style={{ width: '250px' }}>
                 Proceed to Checkout
               </button>
             </Link>

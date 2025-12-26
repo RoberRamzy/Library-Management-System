@@ -9,8 +9,10 @@ export default function Profile() {
     email: '',
     phone: '',
     address: '',
-    password: ''
+    password: '',
+    confirmPassword: '' // Added for verification
   })
+  
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState('')
   const [error, setError] = useState('')
@@ -27,11 +29,24 @@ export default function Profile() {
     e.preventDefault()
     if (!user) return
 
-    setLoading(true)
     setError('')
     setMessage('')
 
-    // Only send fields that have values
+    // 1. Password Verification Check
+    if (form.password) {
+      if (form.password.length < 6) {
+        setError('New password must be at least 6 characters long')
+        return
+      }
+      if (form.password !== form.confirmPassword) {
+        setError('Passwords do not match')
+        return
+      }
+    }
+
+    setLoading(true)
+
+    // 2. Prepare only modified fields
     const updates = {}
     if (form.first_name) updates.first_name = form.first_name
     if (form.last_name) updates.last_name = form.last_name
@@ -46,16 +61,25 @@ export default function Profile() {
       return
     }
 
+    // 3. Call Auth Context update function
     const result = await updateProfile(user.userID, updates)
     setLoading(false)
 
     if (result.success) {
       setMessage('Profile updated successfully!')
-      // Clear form except password field is cleared
-      setForm({ ...form, password: '' })
+      // Clear password fields after success
+      setForm(prev => ({ ...prev, password: '', confirmPassword: '' }))
       setTimeout(() => setMessage(''), 3000)
     } else {
-      setError(result.error || 'Failed to update profile')
+      // Handle Duplicate Entry errors from MySQL via FastAPI
+      const errorMsg = result.error || '';
+      if (errorMsg.includes("Duplicate entry") && errorMsg.includes("email")) {
+        setError("This email address is already in use by another account.");
+      } else if (errorMsg.includes("Duplicate entry") && errorMsg.includes("username")) {
+        setError("This username is already taken.");
+      } else {
+        setError(errorMsg || 'Failed to update profile');
+      }
     }
   }
 
@@ -63,9 +87,7 @@ export default function Profile() {
     setForm({ ...form, [field]: value })
   }
 
-  if (!user) {
-    return null
-  }
+  if (!user) return null
 
   return (
     <div className="page">
@@ -139,25 +161,44 @@ export default function Profile() {
             />
           </div>
 
-          <div className="form-group">
-            <label>New Password (leave blank to keep current)</label>
-            <input
-              className="input"
-              type="password"
-              placeholder="Enter new password"
-              value={form.password}
-              onChange={(e) => updateField('password', e.target.value)}
-              disabled={loading}
-            />
+          <div className="form-grid">
+            <div className="form-group">
+              <label>New Password</label>
+              <input
+                className="input"
+                type="password"
+                placeholder="Leave blank to keep current"
+                value={form.password}
+                onChange={(e) => updateField('password', e.target.value)}
+                disabled={loading}
+              />
+            </div>
+
+            <div className="form-group">
+              <label>Confirm New Password</label>
+              <input
+                className="input"
+                type="password"
+                placeholder="Repeat new password"
+                value={form.confirmPassword}
+                onChange={(e) => updateField('confirmPassword', e.target.value)}
+                disabled={loading}
+              />
+            </div>
           </div>
 
-          <div className="user-info">
-            <p><strong>Username:</strong> {user.username}</p>
-            <p><strong>Role:</strong> {user.Role}</p>
+          <div className="user-info" style={{ marginTop: '20px', padding: '15px', background: '#f8f9fa', borderRadius: '8px' }}>
+            <p style={{ margin: '5px 0' }}><strong>Username:</strong> {user.username}</p>
+            <p style={{ margin: '5px 0' }}><strong>Role:</strong> {user.Role}</p>
           </div>
 
-          <button className="button button-primary" type="submit" disabled={loading}>
-            {loading ? 'Saving...' : 'Save Changes'}
+          <button 
+            className="button button-primary" 
+            type="submit" 
+            disabled={loading}
+            style={{ marginTop: '20px', width: '100%' }}
+          >
+            {loading ? 'Saving Changes...' : 'Save Changes'}
           </button>
         </form>
       </div>
