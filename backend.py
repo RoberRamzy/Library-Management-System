@@ -82,9 +82,9 @@ class BookCreate(BaseModel):
     Price: float
     StockQuantity: int
     threshold: int
-    category: str  # Science, Art, Religion, History, Geography
+    category: str
     PubID: int
-    authorIDs: List[int] = []  # List of author IDs
+    authorIDs: List[int] = []
 
 class BookUpdate(BaseModel):
     Title: Optional[str] = None
@@ -94,7 +94,7 @@ class BookUpdate(BaseModel):
     threshold: Optional[int] = None
     category: Optional[str] = None
     PubID: Optional[int] = None
-    authorIDs: Optional[List[int]] = None  # Update authors if provided
+    authorIDs: Optional[List[int]] = None
 
 class PublisherOrderCreate(BaseModel):
     ISBN: str
@@ -113,9 +113,7 @@ class CheckoutIn(BaseModel):
     card_number: str
     card_expiry: str  # Format YYYY-MM-DD
 
-# ==========================================
 # 1. USER MANAGEMENT & AUTH
-# ==========================================
 
 @app.post("/customer/signup")
 def signup(data: CustomerSignup, conn=Depends(get_db)):
@@ -204,9 +202,8 @@ def logout(userID: int, conn=Depends(get_db)):
         conn.rollback()
         raise HTTPException(status_code=500, detail=str(e))
 
-# ==========================================
+
 # 2. BOOK OPERATIONS (SEARCH & ADMIN)
-# ==========================================
 
 @app.get("/books/search")
 def search_books(title: Optional[str] = None, category: Optional[str] = None, isbn: Optional[str] = None, author: Optional[str] = None, userID: Optional[int] = None, conn=Depends(get_db)):
@@ -423,9 +420,7 @@ def update_book(isbn: str, book_update: BookUpdate, conn=Depends(get_db)):
             raise HTTPException(status_code=400, detail="Stock quantity cannot be negative")
         raise HTTPException(status_code=400, detail=f"Book update failed: {str(err)}")
 
-# ==========================================
 # 3. PUBLISHER & AUTHOR OPERATIONS
-# ==========================================
 
 @app.get("/admin/publishers")
 def list_publishers(conn=Depends(get_db)):
@@ -549,10 +544,7 @@ def confirm_publisher_order(orderID: int, conn=Depends(get_db)):
         conn.rollback()
         raise HTTPException(status_code=400, detail=f"Order confirmation failed: {str(err)}")
 
-# ==========================================
 # 4. SHOPPING CART MANAGEMENT
-# ==========================================
-
 @app.post("/cart/add")
 def add_to_cart(userID: int, item: CartItemIn, conn=Depends(get_db)):
     """
@@ -635,10 +627,7 @@ def remove_from_cart(userID: int, isbn: str, conn=Depends(get_db)):
         conn.rollback()
         raise HTTPException(status_code=400, detail=str(e))
 
-# ==========================================
 # 5. ORDER PROCESSING (CHECKOUT & CONFIRMATION)
-# ==========================================
-
 @app.post("/customer/checkout")
 def checkout(data: CheckoutIn, conn=Depends(get_db)):
     """
@@ -707,10 +696,7 @@ def view_past_orders(userID: int, conn=Depends(get_db)):
     results = cursor.fetchall()
     return results
 
-# ==========================================
 # 6. SYSTEM REPORTS (ADMIN ONLY)
-# ==========================================
-
 @app.get("/admin/reports/sales-prev-month")
 def report_prev_month_sales(conn=Depends(get_db)):
     """
@@ -791,10 +777,7 @@ def report_book_replenishments(isbn: str, conn=Depends(get_db)):
     cursor.execute(query, (isbn,))
     return cursor.fetchone()
 
-# ==========================================
 # 7. ADMIN USER MANAGEMENT
-# ==========================================
-
 @app.get("/admin/users")
 def list_all_users(conn=Depends(get_db)):
     """

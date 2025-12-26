@@ -1,32 +1,6 @@
--- SQL Initialization Script for Online Bookstore System
--- Aligned with Project Requirements (Fall 2025)
--- Database: MySQL compatible
--- Includes: CREATE TABLES, CONSTRAINTS, TRIGGERS, SAMPLE DATA
--- Assumptions:
--- - IDs are AUTO_INCREMENT INT for simplicity.
--- - ISBN is VARCHAR(20) to handle standard formats.
--- - Prices are DECIMAL(8,2).
--- - Dates are DATE; use CURDATE() for current.
--- - Passwords stored as plain text for demo (in production, hash them).
--- - Fixed order quantity for replenishment: 50 (hardcoded in trigger).
--- - Credit card validation is application-level; DB just stores.
--- - Status ENUM: 'Pending', 'Confirmed' for Publisher_Order; 'Pending', 'Completed' for Customer_Order.
--- - Role ENUM: 'Admin', 'Customer'.
--- - Category ENUM as per specs.
--- - Triggers for integrity: prevent negative stock, auto-place replenishment order, add stock on confirmation.
--- - Sample data sufficient for demo (e.g., reports with dates before 2025-12-21).
--- Unclear/Notes:
--- - Credit card validation logic not in DB (app checks "if valid").
--- - Logout clears cart: App handles DELETE FROM Cart_Item WHERE cartID = ?.
--- - Search/Reports: Implemented in app queries, not here.
--- - Admin updates stock directly (e.g., on manual sales), but triggers protect.
--- - For customer checkout: App inserts into Customer_Order/Customer_Order_Item, then updates Book stock (trigger could be added, but per hint, focus on Book updates).
--- - If more triggers needed (e.g., deduct on order insert), add in app or extend.
-
 CREATE DATABASE IF NOT EXISTS bookstore;
 USE bookstore;
 
--- Table: user (handles both Admin and Customer via Role)
 -- Table: user (handles both Admin and Customer via Role)
 CREATE TABLE `user` (
   `userID` INT AUTO_INCREMENT PRIMARY KEY,
@@ -242,7 +216,6 @@ INSERT INTO Book (ISBN, Title, pubYear, Price, StockQuantity, threshold, categor
 ('978-03', 'The Brothers Karamazov', 1880, 18.00, 20, 5, 'Art', 5),
 ('978-04', 'Notes from Underground', 1864, 10.50, 25, 5, 'Art', 1),
 ('978-05', 'The Gambler', 1866, 11.00, 30, 5, 'Art', 1),
--- Harry Potter (History - used as a proxy for Fantasy/Literature)
 ('978-HP1', 'HP and the Sorcerers Stone', 1997, 10.99, 100, 20, 'History', 1),
 ('978-HP2', 'HP and the Chamber of Secrets', 1998, 12.99, 100, 20, 'History', 2),
 ('978-HP3', 'HP and the Prisoner of Azkaban', 1999, 12.99, 80, 20, 'History', 2),
@@ -275,8 +248,7 @@ INSERT INTO Customer_Order (orderID, orderDate, totalPrice, status, card_number,
 
 -- 9. ORDER ITEMS
 INSERT INTO Customer_Order_Item (orderID, ISBN, Quantity, Price_at_purchase) VALUES
-(1, '978-E3', 1, 120.00), (1, '978-E1', 1, 85.00), -- High value Engineering
-(2, '978-01', 1, 12.50), (2, '978-HP1', 3, 10.99), -- Kafka + HP
-(3, '978-E3', 1, 120.00);                       -- Thermodynamics
-
+(1, '978-E3', 1, 120.00), (1, '978-E1', 1, 85.00),
+(2, '978-01', 1, 12.50), (2, '978-HP1', 3, 10.99),
+(3, '978-E3', 1, 120.00);
 SET FOREIGN_KEY_CHECKS = 1;
