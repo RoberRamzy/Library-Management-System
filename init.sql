@@ -201,60 +201,82 @@ DELIMITER ;
 
 -- Sample Data for Demo
 -- Publishers
-INSERT INTO Publisher (name, phone, address) VALUES
-('Penguin Books', '123-456-7890', '123 Publisher St, NY'),
-('HarperCollins', '987-654-3210', '456 Book Ave, CA');
+SET FOREIGN_KEY_CHECKS = 0;
 
--- Authors
-INSERT INTO Author (author_name) VALUES
-('J.K. Rowling'),
-('Stephen King'),
-('Isaac Asimov');
+-- 1. CLEANUP (Ensures no duplicate primary keys)
+TRUNCATE TABLE Book_Author;
+TRUNCATE TABLE Customer_Order_Item;
+TRUNCATE TABLE Customer_Order;
+TRUNCATE TABLE Cart_Item;
+TRUNCATE TABLE Shopping_Cart;
+TRUNCATE TABLE Book;
+TRUNCATE TABLE Author;
+TRUNCATE TABLE Publisher;
+TRUNCATE TABLE user;
 
--- Books (with stock, threshold)
+-- 2. PUBLISHERS
+INSERT INTO Publisher (PubID, name, phone, address) VALUES
+(1, 'Penguin Books', '123-456-7890', '123 Publisher St, NY'),
+(2, 'HarperCollins', '987-654-3210', '456 Book Ave, CA'),
+(3, 'MIT Press', '555-010-9999', 'Cambridge, MA'),
+(4, 'Springer Nature', '555-020-8888', 'Berlin, Germany'),
+(5, 'Dover Publications', '555-030-7777', 'Mineola, NY');
+
+-- 3. AUTHORS
+INSERT INTO Author (authorID, author_name) VALUES
+(1, 'Franz Kafka'),
+(2, 'Fyodor Dostoevsky'),
+(3, 'Gilbert Strang'),
+(4, 'Richard Feynman'),
+(5, 'Bjarne Stroustrup'),
+(6, 'Herbert Goldstein'),
+(7, 'Yunus Cengel'),
+(8, 'Benjamin C. Kuo'),
+(9, 'J.K. Rowling');
+
+-- 4. BOOKS (Aligned with your ENUM: Science, Art, Religion, History, Geography)
 INSERT INTO Book (ISBN, Title, pubYear, Price, StockQuantity, threshold, category, PubID) VALUES
-('978-0439708189', 'Harry Potter and the Sorcerer\'s Stone', 1997, 10.99, 100, 20, 'Science', 1),
-('978-0451524935', '1984', 1949, 8.99, 50, 10, 'History', 2),
-('978-0553380163', 'Foundation', 1951, 7.99, 30, 15, 'Science', 1);
+-- Dostoevsky & Kafka (Art)
+('978-01', 'The Metamorphosis', 1915, 12.50, 40, 10, 'Art', 1),
+('978-02', 'Crime and Punishment', 1866, 15.99, 35, 5, 'Art', 1),
+('978-03', 'The Brothers Karamazov', 1880, 18.00, 20, 5, 'Art', 5),
+('978-04', 'Notes from Underground', 1864, 10.50, 25, 5, 'Art', 1),
+('978-05', 'The Gambler', 1866, 11.00, 30, 5, 'Art', 1),
+-- Harry Potter (History - used as a proxy for Fantasy/Literature)
+('978-HP1', 'HP and the Sorcerers Stone', 1997, 10.99, 100, 20, 'History', 1),
+('978-HP2', 'HP and the Chamber of Secrets', 1998, 12.99, 100, 20, 'History', 2),
+('978-HP3', 'HP and the Prisoner of Azkaban', 1999, 12.99, 80, 20, 'History', 2),
+-- Engineering (Science)
+('978-E1', 'Linear Algebra', 2016, 85.00, 60, 15, 'Science', 3),
+('978-E2', 'Six Easy Pieces', 1994, 14.50, 100, 20, 'Science', 2),
+('978-E3', 'Thermodynamics', 2014, 120.00, 25, 5, 'Science', 4),
+('978-E4', 'Automatic Control Systems', 2009, 110.00, 15, 5, 'Science', 4);
 
--- Book_Author links
+-- 5. BOOK_AUTHOR LINKS
 INSERT INTO Book_Author (ISBN, authorID) VALUES
-('978-0439708189', 1),
-('978-0451524935', 3),  -- George Orwell, but using Asimov for demo
-('978-0553380163', 3);
+('978-01', 1), ('978-02', 2), ('978-03', 2), ('978-04', 2), ('978-05', 2),
+('978-HP1', 9), ('978-HP2', 9), ('978-HP3', 9),
+('978-E1', 3), ('978-E2', 4), ('978-E3', 7), ('978-E4', 8);
 
--- Users (Admin and Customers)
-INSERT INTO `user` (username, password, first_name, last_name, email, phone, address, Role) VALUES
-('admin1', 'adminpass', 'Admin', 'One', 'admin@example.com', '111-222-3333', 'Admin Addr', 'Admin'),
-('cust1', 'custpass', 'John', 'Doe', 'john@example.com', '444-555-6666', '123 Customer St', 'Customer'),
-('cust2', 'custpass2', 'Jane', 'Smith', 'jane@example.com', '777-888-9999', '456 Buyer Ave', 'Customer');
+-- 6. USERS
+INSERT INTO `user` (userID, username, password, first_name, last_name, email, phone, address, Role) VALUES
+(1, 'admin1', 'adminpass', 'Admin', 'One', 'admin@example.com', '111-222-3333', 'Alexandria', 'Admin'),
+(2, 'eng_student', 'pass123', 'Omar', 'Kamal', 'omar@alexu.edu.eg', '010-1234', 'Alexandria', 'Customer'),
+(3, 'lit_fan', 'pass123', 'Sarah', 'Smith', 'sarah@example.com', '444-555', 'London', 'Customer');
 
--- Shopping Carts (one per customer)
-INSERT INTO Shopping_Cart (userID) VALUES (2), (3);
+-- 7. SHOPPING CARTS
+INSERT INTO Shopping_Cart (cartID, userID) VALUES (1, 2), (2, 3);
 
--- Cart Items (demo)
-INSERT INTO Cart_Item (cartID, ISBN, Quantity) VALUES
-(1, '978-0439708189', 2),
-(1, '978-0451524935', 1);
+-- 8. CUSTOMER ORDERS (Staggered dates for your reports)
+INSERT INTO Customer_Order (orderID, orderDate, totalPrice, status, card_number, card_expiry, userID) VALUES
+(1, '2025-11-15', 205.00, 'Completed', '4111222233334444', '2028-12-01', 2),
+(2, '2025-12-10', 45.98, 'Completed', '5555666677778888', '2027-06-01', 3),
+(3, '2025-12-20', 120.00, 'Completed', '4111222233334444', '2028-12-01', 2);
 
--- Customer Orders (with past dates for reports)
-INSERT INTO Customer_Order (orderDate, totalPrice, status, card_number, card_expiry, userID) VALUES
-('2025-11-15', 30.97, 'Completed', '4111111111111111', '2028-12-01', 2),  -- Last month
-('2025-10-10', 8.99, 'Completed', '4111111111111111', '2028-12-01', 3),   -- 2 months ago
-('2025-09-05', 18.98, 'Completed', '4111111111111111', '2028-12-01', 2);   -- 3 months ago
-
--- Customer Order Items
+-- 9. ORDER ITEMS
 INSERT INTO Customer_Order_Item (orderID, ISBN, Quantity, Price_at_purchase) VALUES
-(1, '978-0439708189', 1, 10.99),
-(1, '978-0553380163', 2, 7.99),
-(2, '978-0451524935', 1, 8.99),
-(3, '978-0553380163', 2, 7.99);
+(1, '978-E3', 1, 120.00), (1, '978-E1', 1, 85.00), -- High value Engineering
+(2, '978-01', 1, 12.50), (2, '978-HP1', 3, 10.99), -- Kafka + HP
+(3, '978-E3', 1, 120.00);                       -- Thermodynamics
 
--- Publisher Orders (replenishment, some confirmed)
-INSERT INTO Publisher_Order (orderDate, Quantity, status, PubID, ISBN) VALUES
-('2025-11-20', 50, 'Confirmed', 1, '978-0439708189'),
-('2025-10-15', 50, 'Pending', 2, '978-0451524935');
-
--- End of Script
--- To test: Run queries for reports, searches, etc.
--- E.g., Total sales previous month: SELECT SUM(totalPrice) FROM Customer_Order WHERE MONTH(orderDate) = MONTH(CURDATE() - INTERVAL 1 MONTH) AND YEAR(orderDate) = YEAR(CURDATE() - INTERVAL 1 MONTH) AND status = 'Completed';
+SET FOREIGN_KEY_CHECKS = 1;
